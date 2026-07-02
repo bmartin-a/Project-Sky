@@ -46,12 +46,31 @@ public static partial class TargetValidator
     public static TargetValidationResult ValidateIp(string address)
     {
         address = address.Trim();
-        if (!IPAddress.TryParse(address, out var ip))
+        if (!TryParseStrict(address, out var ip))
             return TargetValidationResult.Fail("Not a valid IP address.");
-        // Reject forms IPAddress.TryParse accepts loosely (e.g. integer-only).
-        if (ip.AddressFamily is not (AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
-            return TargetValidationResult.Fail("Unsupported address family.");
         return TargetValidationResult.Ok(ip.ToString());
+    }
+
+    /// <summary>
+    /// Parses an IP, rejecting the loose forms <see cref="IPAddress.TryParse"/>
+    /// accepts (e.g. "1.2.3" → 1.2.0.3, or integer-only). IPv4 must have exactly
+    /// four dotted octets; this avoids a scanner silently retargeting a
+    /// mistyped address.
+    /// </summary>
+    private static bool TryParseStrict(string address, out IPAddress ip)
+    {
+        ip = IPAddress.None;
+        if (!IPAddress.TryParse(address, out var parsed))
+            return false;
+        if (parsed.AddressFamily is not (AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+            return false;
+        // IPv4 (no colon): require four explicit octets.
+        if (parsed.AddressFamily == AddressFamily.InterNetwork
+            && !address.Contains(':')
+            && address.Split('.').Length != 4)
+            return false;
+        ip = parsed;
+        return true;
     }
 
     public static TargetValidationResult ValidateCidr(string address)
@@ -60,7 +79,7 @@ public static partial class TargetValidator
         var parts = address.Split('/');
         if (parts.Length != 2)
             return TargetValidationResult.Fail("CIDR must be in the form <address>/<prefix>.");
-        if (!IPAddress.TryParse(parts[0], out var ip))
+        if (!TryParseStrict(parts[0], out var ip))
             return TargetValidationResult.Fail("CIDR network address is invalid.");
         if (!int.TryParse(parts[1], out var prefix))
             return TargetValidationResult.Fail("CIDR prefix is not a number.");

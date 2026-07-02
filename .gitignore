@@ -1,0 +1,52 @@
+# .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+artifacts/
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+# Rider / VS
+.idea/
+.vs/
+*.DotSettings.user
+
+# Test results
+[Tt]est[Rr]esult*/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+node_modules/
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.pem
+dataprotection-keys/
+
+# Local data
+data/
+postgres-data/
+redis-data/
+nuclei-templates/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,90 @@
+# Project-Sky full on-premise stack.
+#   cp .env.example .env   # then edit secrets
+#   docker compose up --build
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-projectsky}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-projectsky}
+      POSTGRES_DB: ${POSTGRES_DB:-projectsky}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-projectsky}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+      args:
+        PROJECT: ProjectSky.Api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-projectsky};Username=${POSTGRES_USER:-projectsky};Password=${POSTGRES_PASSWORD:-projectsky}
+      ConnectionStrings__Redis: redis:6379
+      Auth__Mode: ${Auth__Mode:-LocalDev}
+      Nvd__ApiKey: ${Nvd__ApiKey:-}
+      DataProtection__KeyPath: /keys
+    volumes:
+      - dp-keys:/keys
+    ports:
+      - "8080:8080"
+    # Raw sockets for nmap SYN/OS detection (used by the API only if it ever
+    # scans directly; kept for parity). The nmap binary is setcap'd in the image.
+    cap_add:
+      - NET_RAW
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+      args:
+        PROJECT: ProjectSky.Worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8081
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-projectsky};Username=${POSTGRES_USER:-projectsky};Password=${POSTGRES_PASSWORD:-projectsky}
+      ConnectionStrings__Redis: redis:6379
+      Nvd__ApiKey: ${Nvd__ApiKey:-}
+    # The worker runs the scans, so it needs raw-socket capability.
+    cap_add:
+      - NET_RAW
+
+  # OWASP ZAP daemon for active web scanning (wired up in Milestone 2).
+  # zap:
+  #   image: ghcr.io/zaproxy/zaproxy:stable
+  #   command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.key=${Zap__ApiKey:-change-me}
+
+  # Frontend SPA is added in Milestone 1 Phase 4.
+  # frontend:
+  #   build: { context: ./frontend }
+  #   ports: ["3000:3000"]
+
+volumes:
+  postgres-data:
+  redis-data:
+  dp-keys:

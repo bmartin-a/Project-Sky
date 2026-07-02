@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+frontend/node_modules/
+frontend/dist/
+tests/
+*.md
+.git/
+.github/
+data/
+keys/
+.env
+.env.*

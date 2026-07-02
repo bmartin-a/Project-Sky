@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ProjectSky.Core/ProjectSky.Core.csproj" />
+    <Project Path="src/ProjectSky.Scanners/ProjectSky.Scanners.csproj" />
+    <Project Path="src/ProjectSky.Vulnerability/ProjectSky.Vulnerability.csproj" />
+    <Project Path="src/ProjectSky.Infrastructure/ProjectSky.Infrastructure.csproj" />
+    <Project Path="src/ProjectSky.Api/ProjectSky.Api.csproj" />
+    <Project Path="src/ProjectSky.Worker/ProjectSky.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ProjectSky.Scanners.Tests/ProjectSky.Scanners.Tests.csproj" />
+    <Project Path="tests/ProjectSky.Vulnerability.Tests/ProjectSky.Vulnerability.Tests.csproj" />
+    <Project Path="tests/ProjectSky.Api.Tests/ProjectSky.Api.Tests.csproj" />
+  </Folder>
+</Solution>

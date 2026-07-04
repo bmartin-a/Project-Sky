@@ -14,10 +14,10 @@ dependency, built to be contributed to.
 
 | Capability | Engine | Status |
 |---|---|---|
-| Network scanning (ports, services, OS fingerprint) | `nmap` (CLI-wrapped) | Milestone 1 |
-| CVE matching (CPE → NVD, CVSS scoring) | local NVD mirror + `CpeMatcher` | Milestone 1 |
-| Web app testing — template checks | `nuclei` (CLI-wrapped) | Milestone 2 |
-| Web app testing — active spider/scan (XSS, SQLi…) | OWASP ZAP (daemon) | Milestone 2 |
+| Network scanning (ports, services, OS fingerprint) | `nmap` (CLI-wrapped) | ✅ done |
+| CVE matching (CPE → NVD, CVSS scoring) | local NVD mirror + `CpeMatcher` | ✅ done |
+| Web app testing — template checks | `nuclei` (CLI-wrapped) | ✅ done |
+| Web app testing — active spider/scan (XSS, SQLi…) | OWASP ZAP (daemon) | ✅ done |
 | Microsoft Defender ingestion | Defender API | Milestone 3 |
 | Infrastructure (SSL/TLS, container images, config) | `trivy` + native checks | Milestone 3 |
 
@@ -130,8 +130,8 @@ curl localhost:8080/api/scans/<scanId>/findings
 
 ## Roadmap
 
-- **Milestone 1** — Foundation + network scanning end-to-end (auth, NVD/CPE, nmap, UI)
-- **Milestone 2** — Web application testing (Nuclei templates + OWASP ZAP)
+- **Milestone 1** ✅ — Foundation + network scanning end-to-end (auth, NVD/CPE, nmap, UI)
+- **Milestone 2** ✅ — Web application testing (Nuclei templates + OWASP ZAP active scan)
 - **Milestone 3** — Microsoft Defender ingestion + infrastructure scanning
 - **Milestone 4** — Reporting (PDF/CSV), scheduled scans, docs
 

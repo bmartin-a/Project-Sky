@@ -37,7 +37,9 @@ public sealed class CveEnrichmentService
             var product = ResolveProduct(finding);
             if (product is null)
             {
-                finding.RiskScore = _risk.Compute(null, false, null, criticality).Value;
+                // Web findings (nuclei/ZAP) carry their own severity but no CPE;
+                // score them from that severity so they aren't undervalued to zero.
+                finding.RiskScore = ScoreFromSeverity(finding.Severity, criticality);
                 continue;
             }
 
@@ -46,7 +48,7 @@ public sealed class CveEnrichmentService
 
             if (best is null)
             {
-                finding.RiskScore = _risk.Compute(null, false, null, criticality).Value;
+                finding.RiskScore = ScoreFromSeverity(finding.Severity, criticality);
                 continue;
             }
 
@@ -59,6 +61,24 @@ public sealed class CveEnrichmentService
                 .Compute(best.CvssV3BaseScore, best.HasKnownExploit, best.EpssScore, criticality)
                 .Value;
         }
+    }
+
+    /// <summary>
+    /// Approximates a CVSS base score from a finding's severity so findings
+    /// without a matched CVE (web checks, config issues) still get a meaningful
+    /// risk score.
+    /// </summary>
+    private int ScoreFromSeverity(Severity severity, AssetCriticality criticality)
+    {
+        var pseudoCvss = severity switch
+        {
+            Severity.Critical => 9.5,
+            Severity.High => 8.0,
+            Severity.Medium => 5.5,
+            Severity.Low => 3.0,
+            _ => 0.5,
+        };
+        return _risk.Compute(pseudoCvss, false, null, criticality).Value;
     }
 
     private static Cve? SelectWorstMatch(IReadOnlyList<Cve> candidates, string product, string? version)

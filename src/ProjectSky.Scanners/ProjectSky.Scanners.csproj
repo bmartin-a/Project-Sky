@@ -7,4 +7,9 @@
     <ProjectReference Include="..\ProjectSky.Vulnerability\ProjectSky.Vulnerability.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- IHttpClientFactory for the OWASP ZAP daemon client. -->
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
 </Project>

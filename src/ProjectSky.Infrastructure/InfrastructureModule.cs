@@ -10,6 +10,7 @@ using ProjectSky.Infrastructure.Security;
 using ProjectSky.Infrastructure.Services;
 using ProjectSky.Scanners.Base;
 using ProjectSky.Scanners.Network;
+using ProjectSky.Scanners.Web;
 using ProjectSky.Vulnerability.Nvd;
 using ProjectSky.Vulnerability.Scoring;
 
@@ -51,6 +52,17 @@ public static class InfrastructureModule
         services.AddSingleton(scannerOptions);
         services.AddSingleton<CliRunner>();
         services.AddSingleton<IScanner, NmapScanner>();
+
+        // Web scanners: nuclei (templates) + OWASP ZAP (active). Both are ScanType.Web
+        // and the orchestrator runs every scanner registered for the type.
+        services.AddSingleton<IScanner, NucleiScanner>();
+
+        var zapOptions =
+            config.GetSection(ZapOptions.SectionName).Get<ZapOptions>() ?? new ZapOptions();
+        services.AddSingleton(zapOptions);
+        services.AddHttpClient("zap");
+        services.AddSingleton<ZapClient>();
+        services.AddSingleton<IScanner, ZapScanner>();
 
         // --- NVD sync ---
         var nvdOptions = config.GetSection(NvdOptions.SectionName).Get<NvdOptions>() ?? new NvdOptions();

@@ -65,11 +65,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      zap:
+        condition: service_started
     environment:
       ASPNETCORE_URLS: http://+:8081
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-projectsky};Username=${POSTGRES_USER:-projectsky};Password=${POSTGRES_PASSWORD:-projectsky}
       ConnectionStrings__Redis: redis:6379
       Nvd__ApiKey: ${Nvd__ApiKey:-}
+      Zap__BaseUrl: http://zap:8080
+      Zap__ApiKey: ${Zap__ApiKey:-change-me}
     # The worker runs the scans, so it needs raw-socket capability.
     cap_add:
       - NET_RAW
@@ -83,10 +87,16 @@ services:
     ports:
       - "3000:80"
 
-  # OWASP ZAP daemon for active web scanning (wired up in Milestone 2).
-  # zap:
-  #   image: ghcr.io/zaproxy/zaproxy:stable
-  #   command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.key=${Zap__ApiKey:-change-me}
+  # OWASP ZAP daemon for active web scanning (Milestone 2).
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    command: >
+      zap.sh -daemon -host 0.0.0.0 -port 8080
+      -config api.key=${Zap__ApiKey:-change-me}
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+    # Internal only; the worker reaches it at http://zap:8080. Do not expose
+    # this port publicly — the ZAP API can drive requests to arbitrary hosts.
 
 volumes:
   postgres-data:

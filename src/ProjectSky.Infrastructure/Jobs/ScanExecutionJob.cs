@@ -82,9 +82,10 @@ public sealed class ScanExecutionJob : IScanExecutionJob
                 return;
             }
 
-            // 2. Resolve a scanner for this scan type.
-            var scanner = _scanners.FirstOrDefault(s => s.Type == scan.Type);
-            if (scanner is null)
+            // 2. Resolve every scanner registered for this scan type (e.g. Web runs
+            //    both nuclei and ZAP).
+            var scanners = _scanners.Where(s => s.Type == scan.Type).ToList();
+            if (scanners.Count == 0)
             {
                 await FailAsync(scan, $"No scanner registered for type '{scan.Type}'.", ct);
                 return;
@@ -92,8 +93,33 @@ public sealed class ScanExecutionJob : IScanExecutionJob
 
             var options = DeserializeOptions(scan.OptionsJson);
 
-            // 3. Scan.
-            var found = await scanner.ScanAsync(scan.Target, options, _progress, ct);
+            // 3. Run each scanner. An individual scanner failing (e.g. ZAP daemon
+            //    down) is non-fatal as long as at least one produced results.
+            var found = new List<Core.Entities.Finding>();
+            var errors = new List<string>();
+            foreach (var scanner in scanners)
+            {
+                try
+                {
+                    found.AddRange(await scanner.ScanAsync(scan.Target, options, _progress, ct));
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Scanner {Scanner} failed for scan {ScanId}.",
+                        scanner.Name, scan.Id);
+                    errors.Add($"{scanner.Name}: {ex.Message}");
+                }
+            }
+
+            if (found.Count == 0 && errors.Count == scanners.Count)
+            {
+                await FailAsync(scan, string.Join("; ", errors), ct);
+                return;
+            }
 
             // 4. Enrich with CVE matches + risk scores.
             await _enrichment.EnrichAsync(found, scan.Target.Criticality, ct);
@@ -104,14 +130,16 @@ public sealed class ScanExecutionJob : IScanExecutionJob
             await _findings.AddRangeAsync(result.ToInsert, ct);
             await _findings.SaveChangesAsync(ct);
 
-            // 6. Complete.
+            // 6. Complete. Partial scanner failures are surfaced as a warning but
+            //    don't fail the scan.
             scan.Status = ScanStatus.Completed;
             scan.CompletedAt = DateTimeOffset.UtcNow;
+            scan.ErrorMessage = errors.Count > 0 ? $"Partial: {string.Join("; ", errors)}" : null;
             await _scans.SaveChangesAsync(ct);
 
-            await Report(scan, ScanStatus.Completed, 100,
-                $"{result.ToInsert.Count} new, {result.Resolved.Count} resolved",
-                found.Count, ct);
+            var summary = $"{result.ToInsert.Count} new, {result.Resolved.Count} resolved";
+            if (errors.Count > 0) summary += $" ({errors.Count} scanner(s) skipped)";
+            await Report(scan, ScanStatus.Completed, 100, summary, found.Count, ct);
 
             _logger.LogInformation(
                 "Scan {ScanId} completed: {New} new, {Resolved} resolved.",

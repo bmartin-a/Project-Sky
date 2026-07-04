@@ -29,6 +29,16 @@ public abstract class ScannerBase : IScanner
         return Convert.ToHexStringLower(hash);
     }
 
+    /// <summary>Maps a textual severity (nuclei/ZAP) to our severity enum.</summary>
+    protected static Severity SeverityFromName(string? name) => name?.Trim().ToLowerInvariant() switch
+    {
+        "critical" => Severity.Critical,
+        "high" => Severity.High,
+        "medium" => Severity.Medium,
+        "low" => Severity.Low,
+        _ => Severity.Info,
+    };
+
     /// <summary>Maps a CVSS v3 base score to a severity band.</summary>
     protected static Severity SeverityFromCvss(double? baseScore) => baseScore switch
     {

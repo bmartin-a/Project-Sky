@@ -33,6 +33,10 @@ RUN useradd --system --uid 10001 --create-home sky \
     && mkdir -p /keys && chown sky:sky /keys
 USER sky
 
+# Bake nuclei templates into the image so web scans don't fetch them at runtime.
+# `|| true` keeps the build resilient if the templates host is unreachable.
+RUN nuclei -update-templates -disable-update-check || true
+
 COPY --from=build --chown=sky:sky /app/publish ./
 
 ARG PROJECT

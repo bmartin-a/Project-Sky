@@ -27,6 +27,28 @@ jobs:
       - name: Test
         run: dotnet test ProjectSky.slnx -c Release --no-build --verbosity normal
 
+  frontend:
+    name: Frontend build (Node 22)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (typecheck + bundle)
+        run: npm run build
+
   docker-build:
     name: Validate Docker images build
     runs-on: ubuntu-latest
@@ -38,3 +60,6 @@ jobs:
 
       - name: Build Worker image
         run: docker build -f docker/Dockerfile.backend --build-arg PROJECT=ProjectSky.Worker -t projectsky-worker .
+
+      - name: Build Frontend image
+        run: docker build -f docker/Dockerfile.frontend -t projectsky-frontend .

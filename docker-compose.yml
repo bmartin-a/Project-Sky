@@ -74,15 +74,19 @@ services:
     cap_add:
       - NET_RAW
 
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
   # OWASP ZAP daemon for active web scanning (wired up in Milestone 2).
   # zap:
   #   image: ghcr.io/zaproxy/zaproxy:stable
   #   command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.key=${Zap__ApiKey:-change-me}
-
-  # Frontend SPA is added in Milestone 1 Phase 4.
-  # frontend:
-  #   build: { context: ./frontend }
-  #   ports: ["3000:3000"]
 
 volumes:
   postgres-data:

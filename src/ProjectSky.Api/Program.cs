@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.DataProtection;
@@ -11,7 +12,10 @@ using ProjectSky.Infrastructure.Realtime;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-builder.Services.AddControllers();
+// Serialize enums as strings so the API contract is stable and SPA-friendly
+// ("Network"/"Completed" rather than integers).
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 
 builder.Services.AddProjectSkyInfrastructure(config);

@@ -71,7 +71,7 @@ validation + authorization layer before any traffic leaves the box.
 
 ### Prerequisites
 - .NET 10 SDK (for local build) **or** Docker + Docker Compose (for the full stack)
-- Node 20+ (for the frontend, added in Milestone 1 Phase 4)
+- Node 20+ (for the frontend)
 
 ### Run the full stack (Docker Compose)
 ```bash
@@ -89,10 +89,22 @@ dotnet build   ProjectSky.slnx
 dotnet test    ProjectSky.slnx
 ```
 
-> **Note:** this repository is authored in an environment without a .NET SDK,
+### Frontend (React SPA)
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:3000, proxies /api + /hubs to the backend
+npm run build      # typecheck + production bundle
+```
+Stack: React 19 + TypeScript + Vite, Tailwind CSS v4, TanStack Query, React
+Router, Recharts, and the SignalR client for live scan progress. Pages:
+Dashboard, Scans (launch + live detail), Targets, Scan policies.
+
+> **Note:** the .NET backend is authored in an environment without a .NET SDK,
 > so package versions in `Directory.Packages.props` are the intended baseline
-> and are verified by CI (`.github/workflows/ci.yml`) on every push. Build
-> locally or in CI to compile and run tests.
+> and are verified by CI (`.github/workflows/ci.yml`) on every push. The
+> frontend is built and typechecked directly. Build locally or in CI to compile
+> and run everything.
 
 ## First scan (once running)
 

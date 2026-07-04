@@ -75,7 +75,9 @@ public static class InfrastructureModule
         this IServiceCollection services, IConfiguration config)
     {
         var redis = config.GetConnectionString("Redis");
-        var signalR = services.AddSignalR();
+        var signalR = services.AddSignalR()
+            .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(
+                new System.Text.Json.Serialization.JsonStringEnumConverter()));
         if (!string.IsNullOrWhiteSpace(redis))
             signalR.AddStackExchangeRedis(redis);
         return services;

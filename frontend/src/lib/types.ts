@@ -53,6 +53,7 @@ export interface Finding {
   description: string | null;
   severity: Severity;
   state: FindingState;
+  source: string;
   port: number | null;
   protocol: string | null;
   service: string | null;

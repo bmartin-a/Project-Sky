@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+using ProjectSky.Core.Common;
 using ProjectSky.Core.Enums;
 using ProjectSky.Core.Interfaces;
 using ProjectSky.Core.Models;
@@ -22,12 +21,8 @@ public abstract class ScannerBase : IScanner
     /// Stable dedup key for a finding. Reconciliation across re-scans relies on
     /// identical inputs producing an identical fingerprint.
     /// </summary>
-    protected static string ComputeFingerprint(params string?[] parts)
-    {
-        var joined = string.Join('|', parts.Select(p => p?.Trim().ToLowerInvariant() ?? ""));
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(joined));
-        return Convert.ToHexStringLower(hash);
-    }
+    protected static string ComputeFingerprint(params string?[] parts) =>
+        Fingerprint.Compute(parts);
 
     /// <summary>Maps a textual severity (nuclei/ZAP) to our severity enum.</summary>
     protected static Severity SeverityFromName(string? name) => name?.Trim().ToLowerInvariant() switch

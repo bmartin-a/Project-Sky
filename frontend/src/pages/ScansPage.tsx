@@ -19,8 +19,7 @@ import {
 const scanTypes: { value: ScanType; label: string; enabled: boolean }[] = [
   { value: "Network", label: "Network (nmap)", enabled: true },
   { value: "Web", label: "Web app (Nuclei + OWASP ZAP)", enabled: true },
-  { value: "Defender", label: "Defender (Milestone 3)", enabled: false },
-  { value: "Infrastructure", label: "Infrastructure (Milestone 3)", enabled: false },
+  { value: "Infrastructure", label: "Infrastructure (TLS/cert checks)", enabled: true },
 ];
 
 export default function ScansPage() {

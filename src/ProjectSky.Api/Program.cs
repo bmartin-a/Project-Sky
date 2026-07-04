@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectSky.Api.Auth;
 using ProjectSky.Infrastructure;
 using ProjectSky.Infrastructure.Data;
+using ProjectSky.Infrastructure.Defender;
 using ProjectSky.Infrastructure.Jobs;
 using ProjectSky.Infrastructure.Realtime;
 
@@ -76,6 +77,16 @@ RecurringJob.AddOrUpdate<INvdSyncJob>(
     "nvd-incremental",
     j => j.RunIncrementalAsync(CancellationToken.None),
     config["Nvd:SyncCron"] ?? "0 3 * * *");
+
+// Schedule Defender ingestion only when credentials are configured.
+var defenderOptions = app.Services.GetRequiredService<DefenderOptions>();
+if (defenderOptions.IsConfigured)
+{
+    RecurringJob.AddOrUpdate<IDefenderIngestionJob>(
+        "defender-ingest",
+        j => j.RunAsync(CancellationToken.None),
+        defenderOptions.SyncCron);
+}
 
 app.Run();
 

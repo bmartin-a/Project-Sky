@@ -18,8 +18,9 @@ dependency, built to be contributed to.
 | CVE matching (CPE → NVD, CVSS scoring) | local NVD mirror + `CpeMatcher` | ✅ done |
 | Web app testing — template checks | `nuclei` (CLI-wrapped) | ✅ done |
 | Web app testing — active spider/scan (XSS, SQLi…) | OWASP ZAP (daemon) | ✅ done |
-| Microsoft Defender ingestion | Defender API | Milestone 3 |
-| Infrastructure (SSL/TLS, container images, config) | `trivy` + native checks | Milestone 3 |
+| Microsoft Defender ingestion | Defender for Endpoint API | ✅ done |
+| Infrastructure — TLS / certificate checks | `SslTlsScanner` (native) | ✅ done |
+| Infrastructure — container images | `trivy` | planned |
 
 ## Architecture
 
@@ -132,8 +133,8 @@ curl localhost:8080/api/scans/<scanId>/findings
 
 - **Milestone 1** ✅ — Foundation + network scanning end-to-end (auth, NVD/CPE, nmap, UI)
 - **Milestone 2** ✅ — Web application testing (Nuclei templates + OWASP ZAP active scan)
-- **Milestone 3** — Microsoft Defender ingestion + infrastructure scanning
-- **Milestone 4** — Reporting (PDF/CSV), scheduled scans, docs
+- **Milestone 3** ✅ — Microsoft Defender ingestion + infrastructure (TLS) scanning
+- **Milestone 4** — Container image scanning (Trivy), reporting (PDF/CSV), scheduled scans, docs
 
 ## Contributing
 

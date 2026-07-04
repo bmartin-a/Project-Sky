@@ -10,11 +10,18 @@ public class Finding
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public Guid ScanId { get; set; }
+    /// <summary>
+    /// The scan that produced/last observed this finding. Null for findings that
+    /// come from an ingestion source (e.g. Microsoft Defender) rather than a scan.
+    /// </summary>
+    public Guid? ScanId { get; set; }
     public Scan? Scan { get; set; }
 
     public Guid TargetId { get; set; }
     public Target? Target { get; set; }
+
+    /// <summary>Origin of the finding: "Scan" (active) or "Defender" (ingested).</summary>
+    public string Source { get; set; } = "Scan";
 
     public required string Title { get; set; }
     public string? Description { get; set; }

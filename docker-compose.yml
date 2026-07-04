@@ -44,6 +44,9 @@ services:
       ConnectionStrings__Redis: redis:6379
       Auth__Mode: ${Auth__Mode:-LocalDev}
       Nvd__ApiKey: ${Nvd__ApiKey:-}
+      Defender__TenantId: ${Defender__TenantId:-}
+      Defender__ClientId: ${Defender__ClientId:-}
+      Defender__ClientSecret: ${Defender__ClientSecret:-}
       DataProtection__KeyPath: /keys
     volumes:
       - dp-keys:/keys
@@ -74,6 +77,9 @@ services:
       Nvd__ApiKey: ${Nvd__ApiKey:-}
       Zap__BaseUrl: http://zap:8080
       Zap__ApiKey: ${Zap__ApiKey:-change-me}
+      Defender__TenantId: ${Defender__TenantId:-}
+      Defender__ClientId: ${Defender__ClientId:-}
+      Defender__ClientSecret: ${Defender__ClientSecret:-}
     # The worker runs the scans, so it needs raw-socket capability.
     cap_add:
       - NET_RAW

@@ -32,7 +32,7 @@ public class AppDbContext : DbContext
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.Status);
             e.Property(x => x.CreatedBySubject).HasMaxLength(256);
-            e.HasMany(x => x.Findings).WithOne(x => x.Scan!).HasForeignKey(x => x.ScanId);
+            // Scan ↔ Finding relationship is configured on the Finding side.
         });
 
         b.Entity<Finding>(e =>
@@ -41,9 +41,14 @@ public class AppDbContext : DbContext
             e.Property(x => x.Title).HasMaxLength(1024).IsRequired();
             e.Property(x => x.Fingerprint).HasMaxLength(64).IsRequired();
             e.Property(x => x.CveId).HasMaxLength(32);
+            e.Property(x => x.Source).HasMaxLength(32).IsRequired();
             e.HasIndex(x => x.Fingerprint);
             e.HasIndex(x => new { x.TargetId, x.State });
             e.HasOne(x => x.Cve).WithMany().HasForeignKey(x => x.CveId)
+                .OnDelete(DeleteBehavior.SetNull);
+            // ScanId is optional (null for ingested findings); deleting a scan
+            // detaches its findings rather than cascading.
+            e.HasOne(x => x.Scan).WithMany(x => x.Findings).HasForeignKey(x => x.ScanId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

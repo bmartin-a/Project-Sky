@@ -23,7 +23,7 @@ public sealed class FindingReconciliationService
     public ReconciliationResult Reconcile(
         IReadOnlyList<Finding> existingOpen,
         IReadOnlyList<Finding> fresh,
-        Guid scanId)
+        Guid? scanId)
     {
         var now = DateTimeOffset.UtcNow;
         var byFingerprint = existingOpen

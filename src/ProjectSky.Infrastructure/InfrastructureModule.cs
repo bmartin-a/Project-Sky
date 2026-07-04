@@ -3,12 +3,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProjectSky.Core.Interfaces;
 using ProjectSky.Infrastructure.Data;
+using ProjectSky.Infrastructure.Defender;
 using ProjectSky.Infrastructure.Jobs;
 using ProjectSky.Infrastructure.Realtime;
 using ProjectSky.Infrastructure.Repositories;
 using ProjectSky.Infrastructure.Security;
 using ProjectSky.Infrastructure.Services;
 using ProjectSky.Scanners.Base;
+using ProjectSky.Scanners.Infra;
 using ProjectSky.Scanners.Network;
 using ProjectSky.Scanners.Web;
 using ProjectSky.Vulnerability.Nvd;
@@ -64,6 +66,9 @@ public static class InfrastructureModule
         services.AddSingleton<ZapClient>();
         services.AddSingleton<IScanner, ZapScanner>();
 
+        // Infrastructure scanner: TLS/certificate checks.
+        services.AddSingleton<IScanner, SslTlsScanner>();
+
         // --- NVD sync ---
         var nvdOptions = config.GetSection(NvdOptions.SectionName).Get<NvdOptions>() ?? new NvdOptions();
         services.AddSingleton(nvdOptions);
@@ -71,10 +76,19 @@ public static class InfrastructureModule
             .AddStandardResilienceHandler();
         services.AddScoped<NvdSyncService>();
 
+        // --- Microsoft Defender ingestion ---
+        var defenderOptions =
+            config.GetSection(DefenderOptions.SectionName).Get<DefenderOptions>() ?? new DefenderOptions();
+        services.AddSingleton(defenderOptions);
+        services.AddHttpClient("defender");
+        services.AddSingleton<DefenderApiClient>();
+        services.AddScoped<DefenderIngestionService>();
+
         // --- Realtime progress + background jobs ---
         services.AddScoped<IScanProgressReporter, SignalRScanProgressReporter>();
         services.AddScoped<IScanExecutionJob, ScanExecutionJob>();
         services.AddScoped<INvdSyncJob, NvdSyncJob>();
+        services.AddScoped<IDefenderIngestionJob, DefenderIngestionJob>();
 
         return services;
     }

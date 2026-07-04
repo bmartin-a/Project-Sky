@@ -40,12 +40,12 @@ public record ScanResponse(Guid Id, Guid TargetId, ScanType Type, ScanStatus Sta
 // --- Findings ---
 public record FindingResponse(
     Guid Id, string Title, string? Description, Severity Severity, FindingState State,
-    int? Port, string? Protocol, string? Service, string? ServiceVersion,
+    string Source, int? Port, string? Protocol, string? Service, string? ServiceVersion,
     string? Cpe, string? CveId, int RiskScore, string RiskBand,
     DateTimeOffset FirstSeenAt, DateTimeOffset LastSeenAt)
 {
     public static FindingResponse From(Finding f) =>
-        new(f.Id, f.Title, f.Description, f.Severity, f.State, f.Port, f.Protocol, f.Service,
-            f.ServiceVersion, f.Cpe, f.CveId, f.RiskScore, RiskScoreModel.BandFor(f.RiskScore),
+        new(f.Id, f.Title, f.Description, f.Severity, f.State, f.Source, f.Port, f.Protocol,
+            f.Service, f.ServiceVersion, f.Cpe, f.CveId, f.RiskScore, RiskScoreModel.BandFor(f.RiskScore),
             f.FirstSeenAt, f.LastSeenAt);
 }

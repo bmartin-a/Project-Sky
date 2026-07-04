@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -18,11 +19,23 @@ import {
   statusClasses,
 } from "../lib/format";
 import type { Finding, Severity } from "../lib/types";
-import { Card, CardHeader, EmptyState, Pill, Spinner } from "../components/ui";
+import { Button, Card, CardHeader, EmptyState, Pill, Spinner } from "../components/ui";
 
 export default function Dashboard() {
   const targets = useQuery({ queryKey: ["targets"], queryFn: api.listTargets });
   const scans = useQuery({ queryKey: ["scans"], queryFn: api.listScans });
+  const integrations = useQuery({
+    queryKey: ["integrations"],
+    queryFn: api.getIntegrations,
+  });
+
+  const [defenderMsg, setDefenderMsg] = useState<string | null>(null);
+  const syncDefender = useMutation({
+    mutationFn: api.syncDefender,
+    onSuccess: () =>
+      setDefenderMsg("Defender ingestion queued — findings will appear shortly."),
+    onError: () => setDefenderMsg("Failed to queue Defender ingestion."),
+  });
 
   // Aggregate open findings across every target.
   const findingQueries = useQueries({
@@ -62,11 +75,28 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-100">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Overview of your attack surface and recent scan activity.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-100">Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Overview of your attack surface and recent scan activity.
+          </p>
+        </div>
+        {integrations.data?.defenderConfigured && (
+          <div className="text-right">
+            <Button
+              variant="secondary"
+              onClick={() => syncDefender.mutate()}
+              disabled={syncDefender.isPending}
+            >
+              <RefreshCw size={15} />
+              Sync Defender
+            </Button>
+            {defenderMsg && (
+              <p className="mt-1 max-w-xs text-xs text-slate-400">{defenderMsg}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

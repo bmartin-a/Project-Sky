@@ -71,4 +71,12 @@ export const api = {
     request<Finding[]>(`/api/scans/${scanId}/findings`),
   openFindingsByTarget: (targetId: string) =>
     request<Finding[]>(`/api/targets/${targetId}/findings`),
+
+  // Integrations
+  getIntegrations: () =>
+    request<{ defenderConfigured: boolean }>("/api/integrations"),
+  syncDefender: () =>
+    request<{ status: string }>("/api/integrations/defender/sync", {
+      method: "POST",
+    }),
 };

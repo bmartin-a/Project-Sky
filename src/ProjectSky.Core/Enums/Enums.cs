@@ -48,6 +48,7 @@ public enum TargetType
     IpAddress = 1,
     CidrRange = 2,
     Url = 3,
+    ContainerImage = 4,
 }
 
 /// <summary>Business criticality of an asset, used as a risk-score multiplier.</summary>

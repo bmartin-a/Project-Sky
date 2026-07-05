@@ -14,13 +14,17 @@ RUN dotnet publish "src/${PROJECT}/${PROJECT}.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Scanner tooling: nmap (network) + nuclei (web templates, Milestone 2).
+# Scanner tooling: nmap (network) + nuclei (web) + trivy (container images).
 ARG NUCLEI_VERSION=3.3.7
+ARG TRIVY_VERSION=0.58.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends nmap ca-certificates wget unzip libcap2-bin \
     && wget -q "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip" -O /tmp/nuclei.zip \
     && unzip -o /tmp/nuclei.zip -d /usr/local/bin nuclei \
     && rm /tmp/nuclei.zip \
+    && wget -q "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O /tmp/trivy.tar.gz \
+    && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
+    && rm /tmp/trivy.tar.gz \
     # Grant nmap raw-socket capability so it works as a non-root user
     # (SYN scan / OS detection). The container must also be started with
     # cap_add: [NET_RAW] — see docker-compose.yml.

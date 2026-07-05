@@ -62,6 +62,25 @@ public sealed class ScanPolicyRepository(AppDbContext db) : IScanPolicyRepositor
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
 
+public sealed class ScanScheduleRepository(AppDbContext db) : IScanScheduleRepository
+{
+    public Task<ScanSchedule?> GetAsync(Guid id, CancellationToken ct) =>
+        db.ScanSchedules.FirstOrDefaultAsync(s => s.Id == id, ct);
+
+    public async Task<IReadOnlyList<ScanSchedule>> ListAsync(CancellationToken ct) =>
+        await db.ScanSchedules.OrderByDescending(s => s.CreatedAt).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<ScanSchedule>> ListEnabledAsync(CancellationToken ct) =>
+        await db.ScanSchedules.Where(s => s.Enabled).ToListAsync(ct);
+
+    public async Task AddAsync(ScanSchedule schedule, CancellationToken ct) =>
+        await db.ScanSchedules.AddAsync(schedule, ct);
+
+    public void Remove(ScanSchedule schedule) => db.ScanSchedules.Remove(schedule);
+
+    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+}
+
 public sealed class CveRepository(AppDbContext db) : ICveRepository
 {
     public Task<Cve?> GetAsync(string cveId, CancellationToken ct) =>

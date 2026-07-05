@@ -24,12 +24,19 @@ public static partial class TargetValidator
     [GeneratedRegex(@"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$")]
     private static partial Regex HostnameRegex();
 
+    // Container image reference: registry/repo:tag or repo@sha256:... Must start
+    // with an alphanumeric (so it can't be read as a CLI flag) and contain only
+    // characters valid in an image reference — no shell metacharacters or spaces.
+    [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,255}$")]
+    private static partial Regex ImageRefRegex();
+
     public static TargetValidationResult Validate(string address, TargetType type) => type switch
     {
         TargetType.Hostname => ValidateHostname(address),
         TargetType.IpAddress => ValidateIp(address),
         TargetType.CidrRange => ValidateCidr(address),
         TargetType.Url => ValidateUrl(address),
+        TargetType.ContainerImage => ValidateContainerImage(address),
         _ => TargetValidationResult.Fail($"Unknown target type '{type}'."),
     };
 
@@ -89,6 +96,16 @@ public static partial class TargetValidator
             return TargetValidationResult.Fail($"CIDR prefix must be between 0 and {maxPrefix}.");
 
         return TargetValidationResult.Ok($"{ip}/{prefix}");
+    }
+
+    public static TargetValidationResult ValidateContainerImage(string address)
+    {
+        address = address.Trim();
+        if (string.IsNullOrEmpty(address))
+            return TargetValidationResult.Fail("Image reference is empty.");
+        if (!ImageRefRegex().IsMatch(address))
+            return TargetValidationResult.Fail("Not a valid container image reference.");
+        return TargetValidationResult.Ok(address);
     }
 
     public static TargetValidationResult ValidateUrl(string address)

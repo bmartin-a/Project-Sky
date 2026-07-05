@@ -34,6 +34,16 @@ public interface IScanPolicyRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+public interface IScanScheduleRepository
+{
+    Task<ScanSchedule?> GetAsync(Guid id, CancellationToken ct);
+    Task<IReadOnlyList<ScanSchedule>> ListAsync(CancellationToken ct);
+    Task<IReadOnlyList<ScanSchedule>> ListEnabledAsync(CancellationToken ct);
+    Task AddAsync(ScanSchedule schedule, CancellationToken ct);
+    void Remove(ScanSchedule schedule);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
 public interface ICveRepository
 {
     Task<Cve?> GetAsync(string cveId, CancellationToken ct);

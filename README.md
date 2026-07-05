@@ -20,7 +20,9 @@ dependency, built to be contributed to.
 | Web app testing — active spider/scan (XSS, SQLi…) | OWASP ZAP (daemon) | ✅ done |
 | Microsoft Defender ingestion | Defender for Endpoint API | ✅ done |
 | Infrastructure — TLS / certificate checks | `SslTlsScanner` (native) | ✅ done |
-| Infrastructure — container images | `trivy` | planned |
+| Infrastructure — container images | `trivy` (CLI-wrapped) | ✅ done |
+| Reporting (CSV / JSON / printable HTML) | `ReportService` | ✅ done |
+| Scheduled recurring scans | Hangfire recurring jobs | ✅ done |
 
 ## Architecture
 
@@ -134,7 +136,11 @@ curl localhost:8080/api/scans/<scanId>/findings
 - **Milestone 1** ✅ — Foundation + network scanning end-to-end (auth, NVD/CPE, nmap, UI)
 - **Milestone 2** ✅ — Web application testing (Nuclei templates + OWASP ZAP active scan)
 - **Milestone 3** ✅ — Microsoft Defender ingestion + infrastructure (TLS) scanning
-- **Milestone 4** — Container image scanning (Trivy), reporting (PDF/CSV), scheduled scans, docs
+- **Milestone 4** ✅ — Container image scanning (Trivy), reporting (CSV/JSON/HTML), scheduled scans
+
+All four milestones are complete. Reports are exportable per scan at
+`/api/scans/{id}/report/{csv,json,html}` (the HTML report is print-to-PDF
+friendly), and recurring scans are managed on the Scans page.
 
 ## Contributing
 

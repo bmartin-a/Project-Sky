@@ -44,6 +44,11 @@ public sealed class TargetAuthorizer : ITargetAuthorizer
             return TargetAuthorizationResult.Denied(
                 $"Target '{host}' is not in any scan policy allowlist.");
 
+        // Container images are pulled from a registry, not probed over the network,
+        // so IP-scope checks don't apply — the allowlist governs which images.
+        if (target.Type == TargetType.ContainerImage)
+            return TargetAuthorizationResult.Allowed();
+
         var ips = await ResolveAsync(host, target.Type, address, ct);
         if (ips.Count == 0)
             return TargetAuthorizationResult.Denied($"Could not resolve '{host}' to an IP address.");

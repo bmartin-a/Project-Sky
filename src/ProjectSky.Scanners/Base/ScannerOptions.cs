@@ -7,5 +7,6 @@ public sealed class ScannerOptions
 
     public string NmapPath { get; set; } = "/usr/bin/nmap";
     public string NucleiPath { get; set; } = "/usr/local/bin/nuclei";
+    public string TrivyPath { get; set; } = "/usr/local/bin/trivy";
     public int DefaultScanTimeoutSeconds { get; set; } = 1800;
 }

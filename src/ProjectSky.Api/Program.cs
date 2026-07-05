@@ -4,6 +4,7 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using ProjectSky.Api.Auth;
+using ProjectSky.Core.Interfaces;
 using ProjectSky.Infrastructure;
 using ProjectSky.Infrastructure.Data;
 using ProjectSky.Infrastructure.Defender;
@@ -56,6 +57,15 @@ using (var scope = app.Services.CreateScope())
         db.Database.Migrate();
     else
         db.Database.EnsureCreated();
+
+    // Re-register Hangfire recurring jobs for any enabled scan schedules.
+    var schedules = scope.ServiceProvider.GetRequiredService<IScanScheduleRepository>();
+    var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    foreach (var s in schedules.ListEnabledAsync(CancellationToken.None).GetAwaiter().GetResult())
+    {
+        recurring.AddOrUpdate<IScheduledScanJob>(
+            s.RecurringJobId, j => j.RunAsync(s.Id, CancellationToken.None), s.Cron);
+    }
 }
 
 app.MapOpenApi();

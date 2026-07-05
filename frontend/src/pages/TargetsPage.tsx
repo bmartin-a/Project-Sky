@@ -15,7 +15,13 @@ import {
   Spinner,
 } from "../components/ui";
 
-const targetTypes: TargetType[] = ["Hostname", "IpAddress", "CidrRange", "Url"];
+const targetTypes: TargetType[] = [
+  "Hostname",
+  "IpAddress",
+  "CidrRange",
+  "Url",
+  "ContainerImage",
+];
 const criticalities: AssetCriticality[] = ["Low", "Medium", "High", "Critical"];
 
 export default function TargetsPage() {

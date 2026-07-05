@@ -113,6 +113,26 @@ export default function ScanDetailPage() {
                 )}`
               : undefined
           }
+          action={
+            findings.data && findings.data.length > 0 ? (
+              <div className="flex gap-3 text-sm">
+                <a
+                  className="text-sky-400 hover:underline"
+                  href={`/api/scans/${scanId}/report/csv`}
+                >
+                  CSV
+                </a>
+                <a
+                  className="text-sky-400 hover:underline"
+                  href={`/api/scans/${scanId}/report/html`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  HTML report
+                </a>
+              </div>
+            ) : undefined
+          }
         />
         {findings.isLoading ? (
           <div className="p-5">

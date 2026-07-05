@@ -63,4 +63,21 @@ public class TargetValidatorTests
     [InlineData("not a url")]
     public void Rejects_non_http_urls(string url) =>
         Assert.False(TargetValidator.Validate(url, TargetType.Url).IsValid);
+
+    [Theory]
+    [InlineData("nginx")]
+    [InlineData("nginx:1.25")]
+    [InlineData("registry.example.com:5000/team/app:v1.2.3")]
+    [InlineData("alpine@sha256:abc123")]
+    public void Accepts_valid_container_images(string image) =>
+        Assert.True(TargetValidator.Validate(image, TargetType.ContainerImage).IsValid);
+
+    [Theory]
+    [InlineData("nginx; rm -rf /")]   // command injection attempt
+    [InlineData("-oG")]                // leading hyphen (would look like a flag)
+    [InlineData("image with space")]
+    [InlineData("img|pipe")]
+    [InlineData("$(whoami)")]
+    public void Rejects_malicious_or_malformed_images(string image) =>
+        Assert.False(TargetValidator.Validate(image, TargetType.ContainerImage).IsValid);
 }

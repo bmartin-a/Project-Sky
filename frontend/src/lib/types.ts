@@ -15,7 +15,12 @@ export type Severity = "Info" | "Low" | "Medium" | "High" | "Critical";
 
 export type FindingState = "New" | "Existing" | "Resolved";
 
-export type TargetType = "Hostname" | "IpAddress" | "CidrRange" | "Url";
+export type TargetType =
+  | "Hostname"
+  | "IpAddress"
+  | "CidrRange"
+  | "Url"
+  | "ContainerImage";
 
 export type AssetCriticality = "Low" | "Medium" | "High" | "Critical";
 
@@ -45,6 +50,15 @@ export interface Scan {
   errorMessage: string | null;
   createdAt: string;
   completedAt: string | null;
+}
+
+export interface ScanSchedule {
+  id: string;
+  targetId: string;
+  type: ScanType;
+  cron: string;
+  enabled: boolean;
+  createdAt: string;
 }
 
 export interface Finding {

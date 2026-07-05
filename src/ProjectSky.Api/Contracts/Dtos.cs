@@ -28,6 +28,15 @@ public record ScanPolicyResponse(Guid Id, string Name, List<string> AllowedTarge
         new(p.Id, p.Name, p.AllowedTargets, p.AllowPrivateRanges, p.AllowLoopback, p.AllowLinkLocalAndMetadata);
 }
 
+// --- Scan schedules ---
+public record CreateScanScheduleRequest(Guid TargetId, ScanType Type, string Cron);
+
+public record ScanScheduleResponse(Guid Id, Guid TargetId, ScanType Type, string Cron, bool Enabled, DateTimeOffset CreatedAt)
+{
+    public static ScanScheduleResponse From(ScanSchedule s) =>
+        new(s.Id, s.TargetId, s.Type, s.Cron, s.Enabled, s.CreatedAt);
+}
+
 // --- Scans ---
 public record CreateScanRequest(Guid TargetId, ScanType Type, ScanOptions? Options);
 

@@ -37,6 +37,7 @@ public static class InfrastructureModule
         services.AddScoped<IScanRepository, ScanRepository>();
         services.AddScoped<IFindingRepository, FindingRepository>();
         services.AddScoped<IScanPolicyRepository, ScanPolicyRepository>();
+        services.AddScoped<IScanScheduleRepository, ScanScheduleRepository>();
         services.AddScoped<ICveRepository, CveRepository>();
 
         // --- Security ---
@@ -47,6 +48,7 @@ public static class InfrastructureModule
         services.AddSingleton<RiskScoreService>();
         services.AddScoped<CveEnrichmentService>();
         services.AddSingleton<FindingReconciliationService>();
+        services.AddSingleton<ReportService>();
 
         // --- Scanner engine ---
         var scannerOptions =
@@ -66,8 +68,9 @@ public static class InfrastructureModule
         services.AddSingleton<ZapClient>();
         services.AddSingleton<IScanner, ZapScanner>();
 
-        // Infrastructure scanner: TLS/certificate checks.
+        // Infrastructure scanners: TLS/certificate checks + Trivy container images.
         services.AddSingleton<IScanner, SslTlsScanner>();
+        services.AddSingleton<IScanner, TrivyScanner>();
 
         // --- NVD sync ---
         var nvdOptions = config.GetSection(NvdOptions.SectionName).Get<NvdOptions>() ?? new NvdOptions();
@@ -89,6 +92,7 @@ public static class InfrastructureModule
         services.AddScoped<IScanExecutionJob, ScanExecutionJob>();
         services.AddScoped<INvdSyncJob, NvdSyncJob>();
         services.AddScoped<IDefenderIngestionJob, DefenderIngestionJob>();
+        services.AddScoped<IScheduledScanJob, ScheduledScanJob>();
 
         return services;
     }

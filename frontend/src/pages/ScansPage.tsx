@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { formatDate, statusClasses } from "../lib/format";
 import type { ScanType } from "../lib/types";
@@ -11,6 +12,7 @@ import {
   EmptyState,
   ErrorNote,
   Field,
+  Input,
   Pill,
   Select,
   Spinner,
@@ -42,6 +44,20 @@ export default function ScansPage() {
       void qc.invalidateQueries({ queryKey: ["scans"] });
       navigate(`/scans/${scan.id}`);
     },
+  });
+
+  const schedules = useQuery({
+    queryKey: ["schedules"],
+    queryFn: api.listSchedules,
+  });
+  const [cron, setCron] = useState("0 2 * * *");
+  const createSchedule = useMutation({
+    mutationFn: () => api.createSchedule({ targetId, type, cron }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["schedules"] }),
+  });
+  const deleteSchedule = useMutation({
+    mutationFn: (id: string) => api.deleteSchedule(id),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["schedules"] }),
   });
 
   return (
@@ -117,6 +133,61 @@ export default function ScansPage() {
             </div>
           )}
         </form>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Schedules"
+          subtitle="Recurring scans (uses the target + type selected above)."
+          action={
+            <Button
+              variant="secondary"
+              disabled={!targetId || createSchedule.isPending}
+              onClick={() => targetId && createSchedule.mutate()}
+            >
+              Add schedule
+            </Button>
+          }
+        />
+        <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-3">
+          <span className="text-xs text-slate-400">Cron</span>
+          <Input
+            value={cron}
+            onChange={(e) => setCron(e.target.value)}
+            className="max-w-xs font-mono"
+            placeholder="0 2 * * *"
+          />
+          {createSchedule.isError && <ErrorNote error={createSchedule.error} />}
+        </div>
+        {schedules.data && schedules.data.length > 0 ? (
+          <table className="w-full text-left text-sm">
+            <tbody>
+              {schedules.data.map((s) => (
+                <tr
+                  key={s.id}
+                  className="border-b border-slate-800/60 last:border-0"
+                >
+                  <td className="px-5 py-3 font-mono text-slate-200">
+                    {targetsById.get(s.targetId)?.address ?? s.targetId.slice(0, 8)}
+                  </td>
+                  <td className="px-5 py-3 text-slate-400">{s.type}</td>
+                  <td className="px-5 py-3 font-mono text-slate-400">{s.cron}</td>
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      className="text-slate-500 hover:text-red-400"
+                      onClick={() => deleteSchedule.mutate(s.id)}
+                      aria-label="Delete schedule"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <EmptyState message="No schedules yet." />
+        )}
       </Card>
 
       <Card>

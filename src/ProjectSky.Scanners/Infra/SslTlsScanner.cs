@@ -33,6 +33,10 @@ public sealed class SslTlsScanner : ScannerBase
         if (!validation.IsValid || validation.Normalized is null)
             throw new InvalidOperationException($"Refusing to scan invalid target: {validation.Error}");
 
+        // Container images are handled by the Trivy scanner, not TLS.
+        if (target.Type == TargetType.ContainerImage)
+            return [];
+
         if (target.Type == TargetType.CidrRange)
             return [InfoFinding(target, "TLS scan skipped",
                 "TLS scanning is not supported for CIDR ranges.", "cidr")];

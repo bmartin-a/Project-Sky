@@ -5,6 +5,8 @@ import type {
   Finding,
   Scan,
   ScanPolicy,
+  ScanSchedule,
+  ScanType,
   Target,
 } from "./types";
 
@@ -71,6 +73,16 @@ export const api = {
     request<Finding[]>(`/api/scans/${scanId}/findings`),
   openFindingsByTarget: (targetId: string) =>
     request<Finding[]>(`/api/targets/${targetId}/findings`),
+
+  // Schedules
+  listSchedules: () => request<ScanSchedule[]>("/api/schedules"),
+  createSchedule: (body: { targetId: string; type: ScanType; cron: string }) =>
+    request<ScanSchedule>("/api/schedules", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  deleteSchedule: (id: string) =>
+    request<void>(`/api/schedules/${id}`, { method: "DELETE" }),
 
   // Integrations
   getIntegrations: () =>

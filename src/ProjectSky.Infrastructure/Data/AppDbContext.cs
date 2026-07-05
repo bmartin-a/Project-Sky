@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<CpeMatch> CpeMatches => Set<CpeMatch>();
     public DbSet<User> Users => Set<User>();
     public DbSet<ScanPolicy> ScanPolicies => Set<ScanPolicy>();
+    public DbSet<ScanSchedule> ScanSchedules => Set<ScanSchedule>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -81,6 +82,14 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasMaxLength(256).IsRequired();
             // List<string> maps to a jsonb column via EF Core primitive collections.
             e.Property(x => x.AllowedTargets).HasColumnType("jsonb");
+        });
+
+        b.Entity<ScanSchedule>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Cron).HasMaxLength(128).IsRequired();
+            e.Ignore(x => x.RecurringJobId);
+            e.HasOne(x => x.Target).WithMany().HasForeignKey(x => x.TargetId);
         });
     }
 }

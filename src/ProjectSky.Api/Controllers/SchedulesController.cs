@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProjectSky.Api.Auth;
 using ProjectSky.Api.Contracts;
 using ProjectSky.Core.Entities;
 using ProjectSky.Core.Interfaces;
@@ -32,6 +33,7 @@ public sealed class SchedulesController : ControllerBase
         (await _schedules.ListAsync(ct)).Select(ScanScheduleResponse.From).ToList();
 
     [HttpPost]
+    [Authorize(Policy = AuthSetup.AdminPolicy)]
     public async Task<ActionResult<ScanScheduleResponse>> Create(
         CreateScanScheduleRequest request, CancellationToken ct)
     {
@@ -58,6 +60,7 @@ public sealed class SchedulesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthSetup.AdminPolicy)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var schedule = await _schedules.GetAsync(id, ct);

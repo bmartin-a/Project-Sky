@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProjectSky.Api.Auth;
 using ProjectSky.Api.Contracts;
 using ProjectSky.Core.Entities;
 using ProjectSky.Core.Interfaces;
@@ -19,7 +20,10 @@ public sealed class ScanPoliciesController : ControllerBase
     public async Task<IReadOnlyList<ScanPolicyResponse>> List(CancellationToken ct) =>
         (await _repo.ListAsync(ct)).Select(ScanPolicyResponse.From).ToList();
 
+    // Creating/loosening a scan policy widens the SSRF scope guard, so it is
+    // restricted to admins.
     [HttpPost]
+    [Authorize(Policy = AuthSetup.AdminPolicy)]
     public async Task<ActionResult<ScanPolicyResponse>> Create(CreateScanPolicyRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Name))

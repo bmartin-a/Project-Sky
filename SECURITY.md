@@ -24,10 +24,31 @@ Project-Sky enforces this stance in code, not just in docs:
 - The scanner container runs as a **non-root** user with only the
   `CAP_NET_RAW` capability (required for nmap SYN/OS-detection). Do not run it
   as root.
-- Stored credentials (Defender, OIDC client secret) are protected with ASP.NET
-  Data Protection whose keys are **persisted to a mounted volume / database**.
-  For production, back the key ring with a secrets manager (e.g. OpenBao /
-  HashiCorp Vault) — see `docs/` (planned).
+- **Authentication.** `Auth:Mode=LocalDev` authenticates every request as an
+  admin and is refused to start outside the Development environment. Production
+  MUST use `Auth:Mode=Oidc` with `Auth:Oidc:Audience` set (audience validation
+  is mandatory) and an admin role claim (`Auth:Oidc:AdminRole`, default
+  `Admin`, read from the `Auth:Oidc:RoleClaim` claim, default `roles`).
+- **Authorization.** Every endpoint requires an authenticated user; privileged
+  operations — creating/loosening scan policies, triggering Defender ingestion,
+  managing schedules, and the Hangfire dashboard — require the admin role.
+  Scan-policy creation is admin-only specifically because it governs the SSRF
+  scope guard.
+- **Network egress (defense-in-depth).** The scope guard resolves and checks a
+  target's IPs at authorization time, but external tools (nmap/nuclei/ZAP)
+  re-resolve at connect time, so a hostile DNS name or an HTTP redirect could
+  still steer a connection to an internal address (classic scanner SSRF). Run
+  the scanner/worker with **egress filtering** that blocks RFC1918, loopback,
+  link-local/metadata (169.254.0.0/16), `0.0.0.0/8`, and CGNAT — at the
+  network/namespace/proxy layer — so scope is enforced regardless of what a
+  tool re-resolves. This is the robust control; the in-app checks are the first
+  line, not the last.
+- Stored credentials (Defender, OIDC client secret, ZAP key) are read from
+  configuration/environment. A `SecretProtector` (ASP.NET Data Protection,
+  keys persisted to a mounted volume) is available for encrypting values at
+  rest; for production, back the key ring with a secrets manager (OpenBao /
+  HashiCorp Vault). Change all default credentials (`change-me`, the default
+  Postgres password) before any non-local deployment.
 - Put the API and Hangfire dashboard behind your OIDC provider; never expose
   `/hangfire` unauthenticated.
 

@@ -99,6 +99,13 @@ public sealed class ReportService
     private static string Csv(string? value)
     {
         value ??= "";
+
+        // Neutralize spreadsheet formula injection: a leading =, +, -, @, or a
+        // control char makes Excel/LibreOffice evaluate the cell. Prefix with a
+        // single quote so it's treated as text.
+        if (value.Length > 0 && value[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+            value = "'" + value;
+
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         return value;

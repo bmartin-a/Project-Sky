@@ -22,7 +22,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddProjectSkyInfrastructure(config);
 builder.Services.AddProjectSkyRealtime(config);
-builder.Services.AddProjectSkyAuth(config);
+builder.Services.AddProjectSkyAuth(config, builder.Environment);
 
 // Persist Data Protection keys so stored secrets survive restarts (SECURITY.md).
 var keyPath = config["DataProtection:KeyPath"];
@@ -68,18 +68,21 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapOpenApi();
+// Publish the API schema only in Development (avoid anonymous schema disclosure).
+if (app.Environment.IsDevelopment())
+    app.MapOpenApi();
+
 app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ScanProgressHub>("/hubs/scan");
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapHub<ScanProgressHub>("/hubs/scan").RequireAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = [new HangfireDashboardAuthFilter()],
+    Authorization = [new HangfireDashboardAuthFilter(config["Auth:Oidc:AdminRole"] ?? "Admin")],
 });
 
 // Schedule the recurring NVD incremental sync (executed by the Worker's server).

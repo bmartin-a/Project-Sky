@@ -74,10 +74,11 @@ public sealed class NmapScanner : ScannerBase
 
         if (!string.IsNullOrWhiteSpace(options.Ports))
         {
-            args.Add("-p");
-            args.Add(options.Ports); // validated below
+            // Validate BEFORE adding to the argument vector.
             if (!IsValidPortSpec(options.Ports))
                 throw new InvalidOperationException("Invalid port specification.");
+            args.Add("-p");
+            args.Add(options.Ports);
         }
 
         if (options.RunVulnScripts)
@@ -90,8 +91,9 @@ public sealed class NmapScanner : ScannerBase
         return args;
     }
 
-    /// <summary>Port spec grammar: digits, commas, and hyphen ranges only.</summary>
+    /// <summary>Port spec grammar: digits, commas, and hyphen ranges only, no leading hyphen.</summary>
     private static bool IsValidPortSpec(string spec) =>
+        spec.Length > 0 && spec[0] != '-' &&
         spec.All(c => char.IsDigit(c) || c is ',' or '-');
 
     private static List<Finding> MapFindings(Target target, NmapRun run)

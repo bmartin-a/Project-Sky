@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProjectSky.Api.Auth;
 using ProjectSky.Infrastructure.Defender;
 using ProjectSky.Infrastructure.Jobs;
 
@@ -25,6 +26,7 @@ public sealed class IntegrationsController : ControllerBase
 
     /// <summary>Triggers a Defender ingestion run on demand (also runs on a schedule).</summary>
     [HttpPost("defender/sync")]
+    [Authorize(Policy = AuthSetup.AdminPolicy)]
     public IActionResult SyncDefender()
     {
         if (!_defender.IsConfigured)

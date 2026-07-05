@@ -45,4 +45,30 @@ public class IpScopeTests
     [InlineData("192.168.1.0/24", "192.168.2.1", false)]
     public void Cidr_containment(string cidr, string ip, bool expected) =>
         Assert.Equal(expected, IpScope.CidrContains(cidr, IPAddress.Parse(ip)));
+
+    [Theory]
+    [InlineData("0.0.0.0")]      // "this host" — reaches localhost on Linux
+    [InlineData("0.1.2.3")]
+    [InlineData("100.64.1.1")]   // CGNAT
+    [InlineData("198.18.0.1")]   // benchmarking
+    [InlineData("224.0.0.1")]    // multicast
+    [InlineData("240.0.0.1")]    // reserved
+    public void Detects_reserved_ranges(string ip) =>
+        Assert.True(IpScope.IsReserved(IPAddress.Parse(ip)));
+
+    [Fact]
+    public void Public_ip_is_not_reserved() =>
+        Assert.False(IpScope.IsReserved(IPAddress.Parse("8.8.8.8")));
+
+    [Fact]
+    public void Unspecified_is_restricted_by_default() =>
+        Assert.True(IpScope.IsRestrictedByDefault(IPAddress.Parse("0.0.0.0")));
+
+    [Fact]
+    public void Ipv4_mapped_metadata_is_restricted()
+    {
+        // ::ffff:169.254.169.254 must be normalized and blocked like its IPv4 form.
+        Assert.True(IpScope.IsRestrictedByDefault(IPAddress.Parse("::ffff:169.254.169.254")));
+        Assert.True(IpScope.IsPrivate(IPAddress.Parse("::ffff:10.0.0.1")));
+    }
 }

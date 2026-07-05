@@ -44,17 +44,35 @@ public sealed class TargetAuthorizer : ITargetAuthorizer
             return TargetAuthorizationResult.Denied(
                 $"Target '{host}' is not in any scan policy allowlist.");
 
-        // Container images are pulled from a registry, not probed over the network,
-        // so IP-scope checks don't apply — the allowlist governs which images.
+        // Container images are pulled from a registry over the network. If the
+        // reference names an explicit registry host, scope-check that host too so
+        // an image ref can't be used to reach an internal/metadata registry.
         if (target.Type == TargetType.ContainerImage)
-            return TargetAuthorizationResult.Allowed();
+        {
+            var registry = RegistryHostOf(address);
+            if (registry is null)
+                return TargetAuthorizationResult.Allowed(); // Docker Hub official image
+            var registryIps = await ResolveAsync(registry, TargetType.Hostname, registry, ct);
+            if (registryIps.Count == 0)
+                return TargetAuthorizationResult.Denied($"Could not resolve registry '{registry}'.");
+            return CheckIpsInScope(registryIps, matched);
+        }
 
         var ips = await ResolveAsync(host, target.Type, address, ct);
         if (ips.Count == 0)
             return TargetAuthorizationResult.Denied($"Could not resolve '{host}' to an IP address.");
 
+        return CheckIpsInScope(ips, matched);
+    }
+
+    private static TargetAuthorizationResult CheckIpsInScope(
+        IReadOnlyList<IPAddress> ips, ScanPolicy matched)
+    {
         foreach (var ip in ips)
         {
+            // Reserved/special ranges are never scannable, regardless of policy.
+            if (IpScope.IsReserved(ip))
+                return TargetAuthorizationResult.Denied($"Reserved/special address {ip} is blocked.");
             if (IpScope.IsLoopback(ip) && !matched.AllowLoopback)
                 return TargetAuthorizationResult.Denied($"Loopback address {ip} is blocked by policy.");
             if (IpScope.IsPrivate(ip) && !matched.AllowPrivateRanges)
@@ -62,8 +80,25 @@ public sealed class TargetAuthorizer : ITargetAuthorizer
             if (IpScope.IsLinkLocalOrMetadata(ip) && !matched.AllowLinkLocalAndMetadata)
                 return TargetAuthorizationResult.Denied($"Link-local/metadata address {ip} is blocked by policy.");
         }
-
         return TargetAuthorizationResult.Allowed();
+    }
+
+    /// <summary>
+    /// Extracts an explicit registry host from an image reference, or null for a
+    /// Docker Hub image (no registry component). A first path segment is a
+    /// registry only if it contains '.' or ':' or is "localhost".
+    /// </summary>
+    private static string? RegistryHostOf(string imageRef)
+    {
+        var slash = imageRef.IndexOf('/');
+        if (slash < 0) return null;
+        var first = imageRef[..slash];
+        var isRegistry = first.Contains('.') || first.Contains(':') ||
+                         first.Equals("localhost", StringComparison.OrdinalIgnoreCase);
+        if (!isRegistry) return null;
+        // Strip an optional port.
+        var colon = first.IndexOf(':');
+        return colon >= 0 ? first[..colon] : first;
     }
 
     private static string HostOf(TargetType type, string address) => type switch

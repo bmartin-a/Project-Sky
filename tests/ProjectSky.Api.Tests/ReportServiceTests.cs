@@ -35,6 +35,17 @@ public class ReportServiceTests
         Assert.Contains("\"Open port, insecure\"", csv);
     }
 
+    [Theory]
+    [InlineData("=1+2")]
+    [InlineData("+cmd")]
+    [InlineData("-2+3")]
+    [InlineData("@SUM(A1)")]
+    public void Csv_neutralizes_formula_injection(string title)
+    {
+        var csv = _svc.BuildCsv([Finding(title)]);
+        Assert.Contains("'" + title, csv); // prefixed with a quote so it's inert text
+    }
+
     [Fact]
     public void Html_report_includes_target_and_findings()
     {

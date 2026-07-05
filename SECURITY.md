@@ -34,11 +34,14 @@ Project-Sky enforces this stance in code, not just in docs:
   managing schedules, and the Hangfire dashboard — require the admin role.
   Scan-policy creation is admin-only specifically because it governs the SSRF
   scope guard.
-- **Network egress (defense-in-depth).** The scope guard resolves and checks a
-  target's IPs at authorization time, but external tools (nmap/nuclei/ZAP)
-  re-resolve at connect time, so a hostile DNS name or an HTTP redirect could
-  still steer a connection to an internal address (classic scanner SSRF). Run
-  the scanner/worker with **egress filtering** that blocks RFC1918, loopback,
+- **IP pinning.** The authorizer resolves and scope-checks a target's IPs once,
+  and the direct-connect scanners (nmap, TLS) connect to that exact pinned IP
+  (hostname kept only for SNI) instead of re-resolving — closing the
+  DNS-rebinding window for network and TLS scans.
+- **Network egress (defense-in-depth).** IP pinning can't cover HTTP tools that
+  resolve and follow redirects themselves (nuclei, OWASP ZAP), so a hostile
+  redirect could still steer a web scan to an internal address. Run the
+  scanner/worker with **egress filtering** that blocks RFC1918, loopback,
   link-local/metadata (169.254.0.0/16), `0.0.0.0/8`, and CGNAT — at the
   network/namespace/proxy layer — so scope is enforced regardless of what a
   tool re-resolves. This is the robust control; the in-app checks are the first

@@ -14,6 +14,7 @@ public abstract class ScannerBase : IScanner
     public abstract Task<IReadOnlyList<Core.Entities.Finding>> ScanAsync(
         Core.Entities.Target target,
         ScanOptions options,
+        string? pinnedIp,
         IScanProgressReporter progress,
         CancellationToken ct);
 

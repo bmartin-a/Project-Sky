@@ -30,9 +30,14 @@ public sealed class ZapScanner : ScannerBase
     public override async Task<IReadOnlyList<Finding>> ScanAsync(
         Target target,
         ScanOptions options,
+        string? pinnedIp,
         IScanProgressReporter progress,
         CancellationToken ct)
     {
+        // pinnedIp is not used: ZAP resolves the URL host itself, so scope for web
+        // scans relies on the network-egress control documented in SECURITY.md.
+        _ = pinnedIp;
+
         var validation = TargetValidator.Validate(target.Address, target.Type);
         if (!validation.IsValid || validation.Normalized is null)
             throw new InvalidOperationException($"Refusing to scan invalid target: {validation.Error}");

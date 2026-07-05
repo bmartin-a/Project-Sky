@@ -29,9 +29,12 @@ public sealed class TrivyScanner : ScannerBase
     public override async Task<IReadOnlyList<Finding>> ScanAsync(
         Target target,
         ScanOptions options,
+        string? pinnedIp,
         IScanProgressReporter progress,
         CancellationToken ct)
     {
+        _ = pinnedIp; // not applicable: Trivy pulls an image from a registry, not a host connection.
+
         if (target.Type != TargetType.ContainerImage)
             return [];
 

@@ -29,6 +29,7 @@ public sealed class NmapScanner : ScannerBase
     public override async Task<IReadOnlyList<Finding>> ScanAsync(
         Target target,
         ScanOptions options,
+        string? pinnedIp,
         IScanProgressReporter progress,
         CancellationToken ct)
     {
@@ -37,7 +38,12 @@ public sealed class NmapScanner : ScannerBase
         var validation = TargetValidator.Validate(target.Address, target.Type);
         if (!validation.IsValid || validation.Normalized is null)
             throw new InvalidOperationException($"Refusing to scan invalid target: {validation.Error}");
-        var address = validation.Normalized;
+
+        // Prefer the authorizer's pinned IP so nmap scans the exact address that
+        // was scope-checked, rather than re-resolving the hostname (DNS rebinding).
+        var address = pinnedIp is not null && System.Net.IPAddress.TryParse(pinnedIp, out _)
+            ? pinnedIp
+            : validation.Normalized;
 
         await ReportSafeAsync(progress,
             new ScanProgress(target.Id, ScanStatus.Running, 5, "Starting nmap", 0), ct);

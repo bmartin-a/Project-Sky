@@ -55,7 +55,10 @@ public sealed class TargetAuthorizer : ITargetAuthorizer
             var registryIps = await ResolveAsync(registry, TargetType.Hostname, registry, ct);
             if (registryIps.Count == 0)
                 return TargetAuthorizationResult.Denied($"Could not resolve registry '{registry}'.");
-            return CheckIpsInScope(registryIps, matched);
+            // The registry host is scope-checked, but the image scan itself isn't a
+            // direct host connection, so no pinned IP is returned.
+            var registryResult = CheckIpsInScope(registryIps, matched);
+            return registryResult.IsAllowed ? TargetAuthorizationResult.Allowed() : registryResult;
         }
 
         var ips = await ResolveAsync(host, target.Type, address, ct);
@@ -80,7 +83,8 @@ public sealed class TargetAuthorizer : ITargetAuthorizer
             if (IpScope.IsLinkLocalOrMetadata(ip) && !matched.AllowLinkLocalAndMetadata)
                 return TargetAuthorizationResult.Denied($"Link-local/metadata address {ip} is blocked by policy.");
         }
-        return TargetAuthorizationResult.Allowed();
+        // Return the checked IPs so the scan can connect to one of them directly.
+        return TargetAuthorizationResult.Allowed(ips);
     }
 
     /// <summary>

@@ -26,6 +26,7 @@ public sealed class SslTlsScanner : ScannerBase
     public override async Task<IReadOnlyList<Finding>> ScanAsync(
         Target target,
         ScanOptions options,
+        string? pinnedIp,
         IScanProgressReporter progress,
         CancellationToken ct)
     {
@@ -43,13 +44,19 @@ public sealed class SslTlsScanner : ScannerBase
 
         var (host, port) = ResolveEndpoint(target.Type, validation.Normalized);
 
+        // Connect to the authorizer's pinned IP (no re-resolution / rebinding);
+        // keep the hostname for SNI + name-match evaluation.
+        var connectTo = pinnedIp is not null && System.Net.IPAddress.TryParse(pinnedIp, out _)
+            ? pinnedIp
+            : host;
+
         await ReportSafeAsync(progress,
             new ScanProgress(target.Id, ScanStatus.Running, 20, $"Connecting to {host}:{port}", 0), ct);
 
         CertInfo? cert;
         try
         {
-            cert = await HandshakeAsync(host, port, ct);
+            cert = await HandshakeAsync(connectTo, host, port, ct);
         }
         catch (Exception ex) when (ex is SocketException or IOException or AuthenticationException)
         {
@@ -76,12 +83,13 @@ public sealed class SslTlsScanner : ScannerBase
         return (address, 443);
     }
 
-    private static async Task<CertInfo> HandshakeAsync(string host, int port, CancellationToken ct)
+    private static async Task<CertInfo> HandshakeAsync(
+        string connectTo, string sniHost, int port, CancellationToken ct)
     {
         using var tcp = new TcpClient();
         using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         connectCts.CancelAfter(ConnectTimeout);
-        await tcp.ConnectAsync(host, port, connectCts.Token);
+        await tcp.ConnectAsync(connectTo, port, connectCts.Token);
 
         var nameMatches = true;
         using var ssl = new SslStream(tcp.GetStream(), false, (_, _, _, errors) =>
@@ -92,7 +100,7 @@ public sealed class SslTlsScanner : ScannerBase
         });
 
         await ssl.AuthenticateAsClientAsync(
-            new SslClientAuthenticationOptions { TargetHost = host }, connectCts.Token);
+            new SslClientAuthenticationOptions { TargetHost = sniHost }, connectCts.Token);
 
         if (ssl.RemoteCertificate is null)
             throw new AuthenticationException("Server presented no certificate.");

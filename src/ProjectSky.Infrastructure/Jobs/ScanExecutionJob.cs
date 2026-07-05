@@ -93,6 +93,13 @@ public sealed class ScanExecutionJob : IScanExecutionJob
 
             var options = DeserializeOptions(scan.OptionsJson);
 
+            // Pin the authorizer's already-resolved, scope-checked IP so direct-
+            // connect scanners don't re-resolve the hostname (DNS-rebinding guard).
+            // Only meaningful for single-host targets, not CIDR ranges or images.
+            var pinnedIp = scan.Target.Type is TargetType.Hostname or TargetType.Url or TargetType.IpAddress
+                ? auth.ResolvedIps?.FirstOrDefault()?.ToString()
+                : null;
+
             // 3. Run each scanner. An individual scanner failing (e.g. ZAP daemon
             //    down) is non-fatal as long as at least one produced results.
             var found = new List<Core.Entities.Finding>();
@@ -101,7 +108,7 @@ public sealed class ScanExecutionJob : IScanExecutionJob
             {
                 try
                 {
-                    found.AddRange(await scanner.ScanAsync(scan.Target, options, _progress, ct));
+                    found.AddRange(await scanner.ScanAsync(scan.Target, options, pinnedIp, _progress, ct));
                 }
                 catch (OperationCanceledException)
                 {

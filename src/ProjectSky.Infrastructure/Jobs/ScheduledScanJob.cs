@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.Logging;
 using ProjectSky.Core.Entities;
 using ProjectSky.Core.Enums;
@@ -16,18 +15,18 @@ public sealed class ScheduledScanJob : IScheduledScanJob
 {
     private readonly IScanScheduleRepository _schedules;
     private readonly IScanRepository _scans;
-    private readonly IBackgroundJobClient _jobs;
+    private readonly IScanExecutionJob _execution;
     private readonly ILogger<ScheduledScanJob> _logger;
 
     public ScheduledScanJob(
         IScanScheduleRepository schedules,
         IScanRepository scans,
-        IBackgroundJobClient jobs,
+        IScanExecutionJob execution,
         ILogger<ScheduledScanJob> logger)
     {
         _schedules = schedules;
         _scans = scans;
-        _jobs = jobs;
+        _execution = execution;
         _logger = logger;
     }
 
@@ -50,8 +49,10 @@ public sealed class ScheduledScanJob : IScheduledScanJob
         await _scans.AddAsync(scan, ct);
         await _scans.SaveChangesAsync(ct);
 
-        _jobs.Enqueue<IScanExecutionJob>(j => j.RunAsync(scan.Id, CancellationToken.None));
-        _logger.LogInformation("Scheduled scan {ScanId} queued from schedule {ScheduleId}.",
+        _logger.LogInformation("Scheduled scan {ScanId} starting from schedule {ScheduleId}.",
             scan.Id, scheduleId);
+
+        // Run the scan inline within this recurring job (the Hangfire server hosts it).
+        await _execution.RunAsync(scan.Id, ct);
     }
 }

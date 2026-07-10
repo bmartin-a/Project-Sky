@@ -54,7 +54,9 @@ services:
     volumes:
       - dp-keys:/keys
     ports:
-      - "8080:8080"
+      # Host port is configurable (set API_PORT in .env) to avoid conflicts.
+      # The UI at :3000 reaches the API internally regardless of this mapping.
+      - "${API_PORT:-8080}:8080"
     # Raw sockets for nmap SYN/OS detection (used by the API only if it ever
     # scans directly; kept for parity). The nmap binary is setcap'd in the image.
     cap_add:
@@ -94,7 +96,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:80"
+      - "${WEB_PORT:-3000}:80"
 
   # OWASP ZAP daemon for active web scanning (Milestone 2).
   zap:

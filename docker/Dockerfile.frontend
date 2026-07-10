@@ -11,4 +11,7 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
+# Runtime config generation (writes /config.js from env before nginx starts).
+COPY docker/frontend-entrypoint.sh /docker-entrypoint.d/40-config.sh
+RUN chmod +x /docker-entrypoint.d/40-config.sh
 EXPOSE 80

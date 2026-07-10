@@ -85,6 +85,14 @@ docker compose up --build
 - Hangfire dashboard: http://localhost:8080/hangfire  (behind auth)
 - Frontend:          http://localhost:3000
 
+The base compose runs in Development with the no-login **LocalDev** auth mode.
+For a **production, on-premise deployment with Entra ID** (OIDC login in the
+browser, no exposed internal ports), use the prod overlay and follow
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md):
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
 ### Build & test locally
 ```bash
 dotnet restore ProjectSky.slnx

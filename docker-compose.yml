@@ -39,6 +39,9 @@ services:
       redis:
         condition: service_healthy
     environment:
+      # This base compose is the local-dev quickstart: Development enables the
+      # no-login LocalDev auth mode. Production uses docker-compose.prod.yml.
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-projectsky};Username=${POSTGRES_USER:-projectsky};Password=${POSTGRES_PASSWORD:-projectsky}
       ConnectionStrings__Redis: redis:6379

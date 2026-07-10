@@ -5,8 +5,10 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 import type { ScanProgress } from "./types";
+import { getAccessToken } from "./authToken";
+import { config } from "./config";
 
-const BASE = import.meta.env.VITE_API_BASE ?? "";
+const BASE = config.apiBase;
 
 /**
  * Opens a SignalR connection, subscribes to a scan's progress group, and
@@ -17,7 +19,11 @@ export function subscribeToScan(
   onProgress: (p: ScanProgress) => void,
 ): () => void {
   const connection: HubConnection = new HubConnectionBuilder()
-    .withUrl(`${BASE}/hubs/scan`)
+    .withUrl(`${BASE}/hubs/scan`, {
+      // In OIDC mode the token is sent via the access_token query string, which
+      // the API reads for /hubs paths. In LocalDev this returns "" (no token).
+      accessTokenFactory: () => getAccessToken() ?? "",
+    })
     .withAutomaticReconnect()
     .configureLogging(LogLevel.Warning)
     .build();

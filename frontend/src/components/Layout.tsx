@@ -6,6 +6,8 @@ import {
   Crosshair,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { config } from "../lib/config";
+import { OidcSignOut } from "./AuthGate";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -63,8 +65,9 @@ export default function Layout() {
             <NavItem key={n.to} {...n} />
           ))}
         </nav>
-        <div className="px-2 text-[11px] text-slate-600">
-          Authorized use only.
+        <div className="flex flex-col gap-1 px-2 text-[11px] text-slate-600">
+          {config.authMode === "oidc" ? <OidcSignOut /> : null}
+          <span>Authorized use only.</span>
         </div>
       </aside>
 

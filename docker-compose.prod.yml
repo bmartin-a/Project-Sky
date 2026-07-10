@@ -1,0 +1,47 @@
+# Production overlay for Project-Sky. Use together with the base file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Requires a .env with OIDC settings and strong secrets — see docs/DEPLOYMENT.md.
+# In this topology only the frontend is published; it reverse-proxies /api and
+# /hubs to the API over the internal network, so the API, Worker, Postgres,
+# Redis, and ZAP are never exposed publicly. Put a TLS-terminating reverse proxy
+# in front of the frontend port.
+
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Auth__Mode: Oidc
+      Auth__Oidc__Authority: ${Auth__Oidc__Authority}
+      Auth__Oidc__ClientId: ${Auth__Oidc__ClientId}
+      Auth__Oidc__Audience: ${Auth__Oidc__Audience}
+      Auth__Oidc__AdminRole: ${Auth__Oidc__AdminRole:-Admin}
+      Auth__Oidc__RoleClaim: ${Auth__Oidc__RoleClaim:-roles}
+      Cors__Origins__0: ${PUBLIC_ORIGIN}
+    ports: []            # not published; reached only via the frontend proxy
+    restart: unless-stopped
+
+  worker:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    restart: unless-stopped
+
+  frontend:
+    environment:
+      AUTH_MODE: oidc
+      OIDC_AUTHORITY: ${OIDC_AUTHORITY}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_SCOPE: ${OIDC_SCOPE:-openid profile}
+    ports:
+      - "${FRONTEND_PORT:-8088}:80"   # put an HTTPS reverse proxy in front of this
+    restart: unless-stopped
+
+  postgres:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  zap:
+    restart: unless-stopped

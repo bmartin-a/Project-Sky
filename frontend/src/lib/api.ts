@@ -10,9 +10,12 @@ import type {
   Target,
 } from "./types";
 
+import { getAccessToken } from "./authToken";
+import { config } from "./config";
+
 // Same-origin by default; the Vite dev server and the production nginx both
-// proxy /api to the backend. Override with VITE_API_BASE if needed.
-const BASE = import.meta.env.VITE_API_BASE ?? "";
+// proxy /api to the backend. Override via runtime config / VITE_API_BASE.
+const BASE = config.apiBase;
 
 export class ApiError extends Error {
   constructor(
@@ -24,10 +27,12 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getAccessToken();
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
     credentials: "include",

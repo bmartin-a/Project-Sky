@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Data access (EF Core / PostgreSQL), repositories, reconciliation, secrets, Defender client. -->
+  <!-- FrameworkReference gives this shared layer SignalR (hub + reporter) and Hangfire
+       integration types so the API and Worker run an identical realtime/job graph. -->
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectSky.Core\ProjectSky.Core.csproj" />
+    <ProjectReference Include="..\ProjectSky.Vulnerability\ProjectSky.Vulnerability.csproj" />
+    <ProjectReference Include="..\ProjectSky.Scanners\ProjectSky.Scanners.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- External packages only. Data Protection, SignalR core, Microsoft.Extensions.*
+         (Http, Configuration.Binder, Options) come from the ASP.NET shared framework
+         via the FrameworkReference above, so they must NOT be PackageReferenced here. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" />
+  </ItemGroup>
+
+</Project>

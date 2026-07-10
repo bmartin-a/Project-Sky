@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain layer: entities, enums, interfaces, models. No external dependencies. -->
+
+</Project>

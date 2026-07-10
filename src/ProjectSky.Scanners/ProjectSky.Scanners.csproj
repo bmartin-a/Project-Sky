@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Scanner plugins: hardened CLI runner, target validation, nmap/nuclei/zap wrappers. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectSky.Core\ProjectSky.Core.csproj" />
+    <ProjectReference Include="..\ProjectSky.Vulnerability\ProjectSky.Vulnerability.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- IHttpClientFactory for the OWASP ZAP daemon client. -->
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Lightweight web host running the Hangfire server (scan + scheduled jobs)
+       plus the SignalR Redis backplane so jobs can push live progress. -->
+
+  <PropertyGroup>
+    <UserSecretsId>projectsky-worker</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectSky.Core\ProjectSky.Core.csproj" />
+    <ProjectReference Include="..\ProjectSky.Infrastructure\ProjectSky.Infrastructure.csproj" />
+    <ProjectReference Include="..\ProjectSky.Scanners\ProjectSky.Scanners.csproj" />
+    <ProjectReference Include="..\ProjectSky.Vulnerability\ProjectSky.Vulnerability.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.PostgreSql" />
+  </ItemGroup>
+
+</Project>

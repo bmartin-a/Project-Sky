@@ -1,0 +1,61 @@
+<Project>
+
+  <!--
+    Central Package Management: every PackageReference version lives here.
+    Versions target the .NET 10 (net10.0) ecosystem. Because this repo is
+    authored in an environment without a .NET SDK, treat these as the intended
+    baseline and let CI (see .github/workflows/ci.yml) resolve/verify them.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Entity Framework Core + PostgreSQL -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+
+    <!-- Auth (generic OIDC; Entra is just one provider) -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+
+    <!-- Background jobs / queue -->
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.20" />
+    <PackageVersion Include="Hangfire.PostgreSql" Version="1.20.12" />
+
+    <!-- SignalR Redis backplane + cache -->
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="10.0.0" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.31" />
+
+    <!-- Resilience for outbound HTTP (NVD / Defender) -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.0.0" />
+
+    <!-- Logging + DI abstractions used by library projects -->
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
+
+    <!-- Data Protection key persistence -->
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.0" />
+
+    <!-- Config binding + HTTP client factory used by the Infrastructure DI module -->
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+
+    <!-- OpenAPI -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+
+    <!-- Testing -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

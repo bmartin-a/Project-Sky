@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build & test (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore ProjectSky.slnx
+
+      - name: Build
+        run: dotnet build ProjectSky.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test ProjectSky.slnx -c Release --no-build --verbosity normal
+
+  frontend:
+    name: Frontend build (Node 22)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (typecheck + bundle)
+        run: npm run build
+
+  docker-build:
+    name: Validate Docker images build
+    runs-on: ubuntu-latest
+    # Best-effort: the images download scanner binaries (nmap/nuclei/trivy) and
+    # base images at build time. On runners without the necessary network egress
+    # this step can't complete, so it must not fail the overall run — the
+    # authoritative code gates are the build-test and frontend jobs above.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -f docker/Dockerfile.backend --build-arg PROJECT=ProjectSky.Api -t projectsky-api .
+
+      - name: Build Worker image
+        run: docker build -f docker/Dockerfile.backend --build-arg PROJECT=ProjectSky.Worker -t projectsky-worker .
+
+      - name: Build Frontend image
+        run: docker build -f docker/Dockerfile.frontend -t projectsky-frontend .

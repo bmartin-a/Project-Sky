@@ -15,14 +15,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Scanner tooling: nmap (network) + nuclei (web) + trivy (container images).
-ARG NUCLEI_VERSION=3.3.7
-ARG TRIVY_VERSION=0.58.1
+# Pin to known-good release versions; bump these as new releases land. `wget -nv`
+# (not -q) so a bad URL / 404 surfaces a clear error in the build log.
+ARG NUCLEI_VERSION=3.11.0
+ARG TRIVY_VERSION=0.72.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends nmap ca-certificates wget unzip libcap2-bin \
-    && wget -q "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip" -O /tmp/nuclei.zip \
+    && wget -nv --tries=3 --timeout=30 "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip" -O /tmp/nuclei.zip \
     && unzip -o /tmp/nuclei.zip -d /usr/local/bin nuclei \
     && rm /tmp/nuclei.zip \
-    && wget -q "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O /tmp/trivy.tar.gz \
+    && wget -nv --tries=3 --timeout=30 "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O /tmp/trivy.tar.gz \
     && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
     && rm /tmp/trivy.tar.gz \
     # Grant nmap raw-socket capability so it works as a non-root user
